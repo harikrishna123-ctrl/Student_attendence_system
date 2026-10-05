@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Theory & Venn Diagram - Sandip University Attendance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Dynamic Venn Diagram ── */
+    .venn-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    #venn-canvas-svg {
+      width: 100%;
+      max-width: 700px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      overflow: visible;
+    }
+    .venn-set-circle,
+    .venn-region-highlight,
+    .venn-highlight-universe {
+      transition: cx 0.45s cubic-bezier(.4,0,.2,1),
+                  r 0.45s cubic-bezier(.4,0,.2,1);
+    }
+    .venn-set-circle {
+      stroke-width: 2;
+      stroke: #ffffff;
+    }
+    .venn-region-highlight {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .venn-region-highlight.active { opacity: 0.22; }
+    .venn-highlight-universe {
+      fill: none;
+      stroke: #0f172a;
+      stroke-width: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .venn-highlight-universe.active {
+      stroke-width: 5;
+      opacity: 1;
+    }
+    .venn-region-btn { cursor: pointer; }
+    .venn-region-btn:hover text { filter: drop-shadow(0 1px 2px rgba(15, 23, 42, .45)); }
+    .venn-label-group text { text-anchor: middle; }
+    .venn-count-label {
+      font: 800 25px/1 sans-serif;
+      fill: #0f172a;
+      paint-order: stroke;
+      stroke: #ffffff;
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+    .venn-sublabel {
+      font: 700 12px/1 sans-serif;
+      fill: #172554;
+      paint-order: stroke;
+      stroke: #ffffff;
+      stroke-width: 2.5px;
+      stroke-linejoin: round;
+    }
+    .venn-universe-label {
+      font: 800 13px/1 sans-serif;
+      fill: #334155;
+    }
+    .venn-outside-label {
+      font: 700 12px/1 sans-serif;
+      fill: #475569;
+      text-anchor: middle;
+    }
+    .venn-universe-count {
+      font: 800 13px/1 sans-serif;
+      fill: #334155;
+      text-anchor: end;
+    }
+    /* Set-relation badge strip */
+    .set-relation-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      width: 100%;
+    }
+    .rel-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1.5px solid;
+      letter-spacing: 0.02em;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .rel-badge.active  { transform: scale(1.08); }
+    .rel-badge.rel-true  { background: #ecfdf5; color: #166534; border-color: #86efac; }
+    .rel-badge.rel-false { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+    .rel-badge.rel-info  { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+    /* legend */
+    .venn-legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1rem;
+      font-size: 0.83rem;
+      font-weight: 600;
+    }
+    .venn-legend-row span {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+    }
+    .venn-legend-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    /* SVG text styling */
+    .venn-count-text {
+      font-size: 22px;
+      font-weight: 800;
+      pointer-events: none;
+    }
+    .venn-sublabel {
+      font-size: 11px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar Header (Sandip University Style) -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger-btn" id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+      <div class="univ-brand">
+        <div class="univ-logo-badge">
+          <img src="assets/sandip-banner.jpg" alt="Sandip University - NAAC Grade A" class="univ-banner-img">
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="notif-bell-btn" title="Notifications">
+        🔔
+        <span class="notif-count">0</span>
+      </button>
+
+      <div class="user-greeting">
+        Welcome: <span>Harikrishnareddy</span>
+      </div>
+
+      <div class="db-pill">
+        <span class="db-dot"></span>
+        <span id="db-status-info">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Body Layout (Sidebar + Main Content) -->
+  <div class="app-container">
+    
+    <!-- Left Dark Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-category">ATTENDANCE SYSTEM</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/dashboard" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📊</span>
+              <span>Dashboard</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/students" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">👨‍🎓</span>
+              <span>Student Directory</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/attendance" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📝</span>
+              <span>Mark Attendance</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/subjects" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📚</span>
+              <span>Subjects</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-category">SET THEORY MODULE</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/analysis" class="sidebar-link active">
+            <div class="link-left">
+              <span class="link-icon">🔢</span>
+              <span>Set Theory &amp; Venn</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/reports" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📑</span>
+              <span>Academic Reports</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+      
+      <!-- Breadcrumb Header -->
+      <div class="content-breadcrumb">
+        Set Theory Analysis <span>Discrete Mathematics Formulation &amp; Interactive Dynamic Venn Diagram</span>
+      </div>
+
+      <!-- Controls & Subject Selector -->
+      <div class="panel">
+        <div class="panel-body">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <!-- Subject Selector (Dynamic from DB) -->
+              <div>
+                <label for="analysis-subject-select" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Select Subject 📚:</label>
+                <select id="analysis-subject-select" class="form-control" style="min-width: 200px; font-weight: 600; color: #1d4ed8;" onchange="loadSetTheoryAnalysis()">
+                  <!-- Dynamically populated from database -->
+                </select>
+              </div>
+
+              <!-- Analysis Mode -->
+              <div>
+                <label for="analysis-mode-select" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Analysis Mode 🔬:</label>
+                <select id="analysis-mode-select" class="form-control" onchange="toggleAnalysisMode()">
+                  <option value="single">Single Subject (Present vs Absent)</option>
+                  <option value="comparison">Multi-Subject Comparison (A ∩ B, A ∪ B)</option>
+                </select>
+              </div>
+
+              <!-- Comparison Subject (Shown only in comparison mode) -->
+              <div id="comparison-subject-box" style="display: none;">
+                <label for="analysis-subject2-select" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #7e22ce;">Compare With Subject 2:</label>
+                <select id="analysis-subject2-select" class="form-control" style="min-width: 200px; font-weight: 600; color: #7e22ce;" onchange="loadSetTheoryAnalysis()">
+                  <!-- Dynamically populated from database -->
+                </select>
+              </div>
+
+              <!-- Evaluated Date Selector -->
+              <div>
+                <label for="analysis-date-picker" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Evaluation Date 📅:</label>
+                <input type="date" id="analysis-date-picker" class="form-control" style="min-width: 155px; font-weight: 600;" onchange="loadSetTheoryAnalysis()">
+              </div>
+
+              <!-- Class Filter -->
+              <div>
+                <label for="analysis-class-filter" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Class / Cohort 🎓:</label>
+                <select id="analysis-class-filter" class="form-control" onchange="loadSetTheoryAnalysis()">
+                  <option value="">All Cohorts</option>
+                </select>
+              </div>
+              <div>
+                <label for="analysis-section-filter" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Section:</label>
+                <select id="analysis-section-filter" class="form-control" onchange="loadSetTheoryAnalysis()">
+                  <option value="">All Sections</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="font-size: 0.82rem; color: #64748b; font-weight: 600;">
+              ⚡ Dynamic Set Theory Engine Active
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Set Theory Summary Statistics Cards (Section 10 Requirements) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1rem 1.25rem;">
+          <div style="font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Universal Set (U)</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;" id="stat-u-count">0</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Total Cohort Students</div>
+        </div>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1rem 1.25rem;">
+          <div style="font-size: 0.78rem; font-weight: 600; color: #1e40af; text-transform: uppercase;">Present Set (A)</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #1d4ed8; margin-top: 0.25rem;" id="stat-a-count">0</div>
+          <div style="font-size: 0.75rem; color: #1e40af;" id="stat-a-desc">Students Present</div>
+        </div>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem 1.25rem;">
+          <div style="font-size: 0.78rem; font-weight: 600; color: #991b1b; text-transform: uppercase;">Absent Set (B)</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #dc2626; margin-top: 0.25rem;" id="stat-b-count">0</div>
+          <div style="font-size: 0.75rem; color: #991b1b;" id="stat-b-desc">Students Absent</div>
+        </div>
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 1rem 1.25rem;">
+          <div style="font-size: 0.78rem; font-weight: 600; color: #065f46; text-transform: uppercase;">Attendance %</div>
+          <div style="font-size: 1.75rem; font-weight: 800; color: #15803d; margin-top: 0.25rem;" id="stat-pct">0%</div>
+          <div style="font-size: 0.75rem; color: #065f46;">Turnout Rate (A / U)</div>
+        </div>
+      </div>
+
+      <!-- Mathematical Formulation Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📚 Mathematical Definition of Sets</div>
+        </div>
+        <div class="panel-body" style="font-size: 0.875rem; line-height: 1.6;">
+          <p>Let <strong>U</strong> be the <em>Universal Set</em> comprising enrolled students in the selected class and section.</p>
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+            <li><strong>Set A</strong> = { s &in; U | Student <em>s</em> is Present on the evaluated date }</li>
+            <li><strong>Set B</strong> = { s &in; U | Student <em>s</em> is Absent on the evaluated date }</li>
+            <li><strong>A &cup; B = U</strong> and <strong>A &cap; B = &empty;</strong> for single-subject attendance.</li>
+          </ul>
+          <p style="color: #64748b;">
+            💡 <em>Click any Venn diagram region or Set Card below to dynamically view the list of students in the table.</em>
+          </p>
+        </div>
+      </div>
+
+      <!-- Dynamic Venn Diagram Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🔬 Interactive Dynamic Venn Diagram</div>
+          <div style="font-size: 0.82rem; color: #64748b;">Visual representation of Sets A and B</div>
+        </div>
+        <div class="panel-body">
+          <div class="venn-container">
+            <svg id="venn-canvas-svg" viewBox="0 0 580 300" role="img" aria-label="Interactive Venn diagram of sets A and B" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="venn-clip-a" clipPathUnits="userSpaceOnUse">
+                  <circle id="venn-clip-circle-a" cx="220" cy="150" r="125" />
+                </clipPath>
+                <mask id="venn-mask-a-only" maskUnits="userSpaceOnUse" x="0" y="0" width="580" height="300">
+                  <rect x="0" y="0" width="580" height="300" fill="#fff" />
+                  <circle id="venn-mask-exclude-b" cx="360" cy="150" r="125" fill="#000" />
+                </mask>
+                <mask id="venn-mask-b-only" maskUnits="userSpaceOnUse" x="0" y="0" width="580" height="300">
+                  <rect x="0" y="0" width="580" height="300" fill="#fff" />
+                  <circle id="venn-mask-exclude-a" cx="220" cy="150" r="125" fill="#000" />
+                </mask>
+                <mask id="venn-mask-neither" maskUnits="userSpaceOnUse" x="0" y="0" width="580" height="300">
+                  <rect x="0" y="0" width="580" height="300" fill="#fff" />
+                  <circle id="venn-mask-neither-exclude-a" cx="220" cy="150" r="125" fill="#000" />
+                  <circle id="venn-mask-neither-exclude-b" cx="360" cy="150" r="125" fill="#000" />
+                </mask>
+              </defs>
+              <rect id="venn-highlight-universe" class="venn-highlight-universe" x="15" y="12" width="550" height="276" rx="16" />
+
+              <rect id="venn-highlight-neither" class="venn-region-highlight" x="15" y="12" width="550" height="276" rx="16" fill="#d8eee2" mask="url(#venn-mask-neither)" />
+              <circle id="venn-circle-a" class="venn-set-circle venn-region-btn" cx="220" cy="150" r="125" fill="#8fe1e4" fill-opacity="0.9" mask="url(#venn-mask-a-only)" onclick="selectVennRegion('only_A')" />
+              <circle id="venn-circle-b" class="venn-set-circle venn-region-btn" cx="360" cy="150" r="125" fill="#f5e99a" fill-opacity="0.9" mask="url(#venn-mask-b-only)" onclick="selectVennRegion('only_B')" />
+              <circle id="venn-inter-fill" class="venn-set-circle venn-region-btn" cx="360" cy="150" r="125" fill="#93d9b3" fill-opacity="0.96" clip-path="url(#venn-clip-a)" onclick="selectVennRegion('intersection')" />
+
+              <circle id="venn-highlight-only-a" class="venn-region-highlight" cx="220" cy="150" r="125" fill="#36bfc5" mask="url(#venn-mask-a-only)" />
+              <circle id="venn-highlight-only-b" class="venn-region-highlight" cx="360" cy="150" r="125" fill="#e3c82f" mask="url(#venn-mask-b-only)" />
+              <circle id="venn-highlight-intersection" class="venn-region-highlight" cx="360" cy="150" r="125" fill="#43b979" clip-path="url(#venn-clip-a)" />
+
+              <g class="venn-region-btn venn-label-group" onclick="selectVennRegion('only_A')" role="button" tabindex="0" aria-label="Select only A">
+                <text id="venn-text-only-a" x="180" y="145" class="venn-count-label">0</text>
+                <text id="venn-sublabel-a" x="180" y="169" class="venn-sublabel">Only A</text>
+              </g>
+              <g class="venn-region-btn venn-label-group" onclick="selectVennRegion('intersection')" role="button" tabindex="0" aria-label="Select the intersection">
+                <text id="venn-text-intersection" x="290" y="145" class="venn-count-label">0</text>
+                <text id="venn-sublabel-inter" x="290" y="169" class="venn-sublabel">A ∩ B</text>
+              </g>
+              <g class="venn-region-btn venn-label-group" onclick="selectVennRegion('only_B')" role="button" tabindex="0" aria-label="Select only B">
+                <text id="venn-text-only-b" x="400" y="145" class="venn-count-label">0</text>
+                <text id="venn-sublabel-b" x="400" y="169" class="venn-sublabel">Only B</text>
+              </g>
+            </svg>
+            <div id="set-relation-strip" class="set-relation-strip" aria-live="polite"></div>
+
+            <!-- Venn Diagram Legend -->
+            <div id="venn-legend-container" style="display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; width: 100%;">
+              <div onclick="selectVennRegion('only_A')" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600;">
+                <span style="width: 16px; height: 16px; border-radius: 4px; background: #8fe1e4; border: 1px solid #58bfc4; display: inline-block;"></span>
+                <span id="legend-text-a">Set A: Present Students</span>
+              </div>
+              <div onclick="selectVennRegion('intersection')" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600;">
+                <span style="width: 16px; height: 16px; border-radius: 4px; background: #93d9b3; border: 1px solid #43b979; display: inline-block;"></span>
+                <span id="legend-text-inter">A &cap; B: Shared Students</span>
+              </div>
+              <div onclick="selectVennRegion('only_B')" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600;">
+                <span style="width: 16px; height: 16px; border-radius: 4px; background: #f5e99a; border: 1px solid #d6c457; display: inline-block;"></span>
+                <span id="legend-text-b">Set B: Absent Students</span>
+              </div>
+              <div onclick="selectVennRegion('neither')" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600;">
+                <span style="width: 16px; height: 16px; border-radius: 4px; background: #d8eee2; border: 1px solid #a7d6bb; display: inline-block;"></span>
+                <span id="legend-text-neither">Outside: U - (A &cup; B)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Set Operation Cards Grid -->
+      <h3 style="margin-bottom: 1rem; font-size: 1.15rem; color: #1e293b;">Set Operations &amp; Subsets</h3>
+      <div class="set-cards-grid">
+        
+        <!-- Universal Set U -->
+        <div class="set-card" id="set-u" onclick="displaySetDetails('U', 'Universal Set U (All Registered Students)', currentAnalysisData.sets.U.students)">
+          <div class="set-header">
+            <span class="set-math-notation">U</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Universal Set (U)</div>
+          <div class="set-desc">All registered students under evaluation.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Set A -->
+        <div class="set-card" id="set-a" onclick="displaySetDetails('A', 'Set A: Students Present on Evaluated Date', currentAnalysisData.sets.A.students)">
+          <div class="set-header">
+            <span class="set-math-notation">A</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Set A (Present Today)</div>
+          <div class="set-desc">Students marked present on the selected date.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Set B -->
+        <div class="set-card" id="set-b" onclick="displaySetDetails('B', 'Set B: Students With Attendance >= 75%', currentAnalysisData.sets.B.students)">
+          <div class="set-header">
+            <span class="set-math-notation">B</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Set B (Absent)</div>
+          <div class="set-desc">Students absent in the selected subject on the evaluated date.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Union A ∪ B -->
+        <div class="set-card" id="set-union" onclick="displaySetDetails('union', 'A ∪ B: Union (Present Today OR Regular >= 75%)', currentAnalysisData.sets.union.students)">
+          <div class="set-header">
+            <span class="set-math-notation">A &cup; B</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Union (A &cup; B)</div>
+          <div class="set-desc">All students present or absent in the selected subject.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Intersection A ∩ B -->
+        <div class="set-card" id="set-intersection" onclick="displaySetDetails('intersection', 'A ∩ B: Intersection (Consistent High Performers)', currentAnalysisData.sets.intersection.students)">
+          <div class="set-header">
+            <span class="set-math-notation">A &cap; B</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Intersection (A &cap; B)</div>
+          <div class="set-desc">Empty for single-subject attendance; available for subject comparison.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Difference A - B -->
+        <div class="set-card" id="set-a-minus-b" onclick="displaySetDetails('A-B', 'A - B: Difference (Present Today But Overall < 75%)', currentAnalysisData.sets.diff_A_minus_B.students)">
+          <div class="set-header">
+            <span class="set-math-notation">A - B</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Difference (A - B)</div>
+          <div class="set-desc">Students present in A and not in B.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Difference B - A -->
+        <div class="set-card" id="set-b-minus-a" onclick="displaySetDetails('B-A', 'B - A: Difference (Regular Students Absent Today)', currentAnalysisData.sets.diff_B_minus_A.students)">
+          <div class="set-header">
+            <span class="set-math-notation">B - A</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Difference (B - A)</div>
+          <div class="set-desc">Students in B and not in A.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Complement A' -->
+        <div class="set-card" id="set-comp-a" onclick="displaySetDetails('A\'', 'A\' = U - A: Complement of A (Absent on Date)', currentAnalysisData.sets.complement_A.students)">
+          <div class="set-header">
+            <span class="set-math-notation">A'</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Complement of A (A')</div>
+          <div class="set-desc">All students absent on the evaluated date (U - A).</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+        <!-- Complement B' -->
+        <div class="set-card" id="set-comp-b" onclick="displaySetDetails('B\'', 'B\' = U - B: Defaulters (< 75%)', currentAnalysisData.sets.complement_B.students)">
+          <div class="set-header">
+            <span class="set-math-notation">B'</span>
+            <span class="set-count-badge">n = 0</span>
+          </div>
+          <div class="set-title">Complement of B (B')</div>
+          <div class="set-desc">Students in U who are not in the absent set.</div>
+          <div class="set-elements-preview">{ ... }</div>
+        </div>
+
+      </div>
+
+      <!-- Set Inspection Table -->
+      <div class="panel" id="set-details-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="set-details-title">Selected Set Students Inspection</div>
+          <span class="badge badge-eligible" id="set-details-count">0 Student(s)</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">S.No</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Class-Section</th>
+                <th>Cumulative Attendance %</th>
+              </tr>
+            </thead>
+            <tbody id="set-details-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem;">Click on any Set Card above or Venn diagram region to inspect students.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Student Attendance Analyzer Using Set Theory &bull; Sandip University College Engineering Project &bull; BUCHIREDDYGARI HARI KRISHNA REDDY
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1d4ed8">
+  <title>Sign In - Student Attendance Analyzer | Sandip University</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+  <div class="login-wrapper">
+    <div class="login-card">
+      
+      <!-- Brand & Header -->
+      <div class="login-card-header">
+        <img class="login-university-logo" src="assets/sandip-university-logo.png" alt="Sandip University">
+        <h1 class="login-title">Student Attendance Analyzer</h1>
+        <p class="login-subtitle">Discrete Mathematics &bull; Set Theory Portal</p>
+      </div>
+
+      <!-- Simple Role Switcher (Student / Admin) -->
+      <div class="login-role-switch" role="tablist" aria-label="Portal Role">
+        <button class="login-role-btn active" id="student-role-btn" type="button" role="tab" aria-selected="true" data-role="student">
+          <span class="role-icon">👨‍🎓</span> Student
+        </button>
+        <button class="login-role-btn" id="admin-role-btn" type="button" role="tab" aria-selected="false" data-role="admin">
+          <span class="role-icon">🛡️</span> Administrator
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="portal-login-form" class="login-form" autocomplete="on">
+        
+        <!-- Identity Field -->
+        <div class="login-field-group">
+          <label class="login-label" id="login-identity-label" for="login-identity">Student Name or ID</label>
+          <input 
+            class="login-input" 
+            id="login-identity" 
+            name="identity" 
+            type="text" 
+            autocomplete="username" 
+            placeholder="e.g. S001 or Aarav Sharma" 
+            list="students-datalist"
+            required
+          >
+          <datalist id="students-datalist">
+            <option value="S001 - Aarav Sharma"></option>
+            <option value="S002 - Bhavna Patel"></option>
+            <option value="S003 - Chirag Reddy"></option>
+            <option value="S004 - Divya Nair"></option>
+            <option value="S005 - Eshaan Khan"></option>
+            <option value="S006 - Farhan Ali"></option>
+            <option value="S007 - Gayatri Joshi"></option>
+            <option value="S008 - Harshitha V"></option>
+            <option value="S009 - Ishan Gupta"></option>
+            <option value="S010 - Juhi Mehta"></option>
+          </datalist>
+          <p class="login-field-hint" id="login-field-hint">Select from suggestions or enter your Student ID / Name</p>
+        </div>
+
+        <!-- Password Field -->
+        <div class="login-field-group">
+          <div class="login-label-row">
+            <label class="login-label" for="login-password">Password</label>
+            <span class="login-label-hint">Default: Any password</span>
+          </div>
+          <input 
+            class="login-input" 
+            id="login-password" 
+            name="password" 
+            type="password" 
+            autocomplete="current-password" 
+            placeholder="Enter password" 
+            value="admin123"
+            required
+          >
+        </div>
+
+        <!-- Submit Button -->
+        <button class="login-submit-btn" id="login-submit-btn" type="submit">
+          <span id="login-btn-text">Sign In as Student</span>
+          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+        </button>
+
+        <!-- Error Message -->
+        <div class="login-error-alert" id="login-error" role="alert" hidden>
+          <span class="error-icon">⚠️</span>
+          <span id="login-error-text">Please enter both your credentials to continue.</span>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="login-card-footer">
+        <span>Sandip University &bull; UGC Recognised</span>
+        <span class="portal-tag">Discrete Mathematics Project</span>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Sample master student list (fallback)
+    let knownStudents = [
+      { student_id: "S001", roll_number: "21CS01", name: "Aarav Sharma" },
+      { student_id: "S002", roll_number: "21CS02", name: "Bhavna Patel" },
+      { student_id: "S003", roll_number: "21CS03", name: "Chirag Reddy" },
+      { student_id: "S004", roll_number: "21CS04", name: "Divya Nair" },
+      { student_id: "S005", roll_number: "21CS05", name: "Eshaan Khan" },
+      { student_id: "S006", roll_number: "21CS06", name: "Farhan Ali" },
+      { student_id: "S007", roll_number: "21CS07", name: "Gayatri Joshi" },
+      { student_id: "S008", roll_number: "21CS08", name: "Harshitha V" },
+      { student_id: "S009", roll_number: "21CS09", name: "Ishan Gupta" },
+      { student_id: "S010", roll_number: "21CS10", name: "Juhi Mehta" }
+    ];
+
+    // Attempt to fetch dynamic students list from backend API
+    fetch("/api/students")
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.students) && data.students.length > 0) {
+          knownStudents = data.students;
+          const datalist = document.getElementById("students-datalist");
+          if (datalist) {
+            datalist.innerHTML = knownStudents.map(s => 
+              `<option value="${s.student_id} - ${s.name}"></option>`
+            ).join("");
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback already pre-loaded
+      });
+
+    // Check if already signed in
+    if (sessionStorage.getItem("attendancePortalUser")) {
+      window.location.replace("/dashboard");
+    }
+
+    const studentBtn = document.getElementById("student-role-btn");
+    const adminBtn = document.getElementById("admin-role-btn");
+    const identityLabel = document.getElementById("login-identity-label");
+    const identityInput = document.getElementById("login-identity");
+    const passwordInput = document.getElementById("login-password");
+    const fieldHint = document.getElementById("login-field-hint");
+    const submitBtnText = document.getElementById("login-btn-text");
+    const loginForm = document.getElementById("portal-login-form");
+    const errorAlert = document.getElementById("login-error");
+    const errorText = document.getElementById("login-error-text");
+
+    let selectedRole = "student";
+
+    function setRole(role) {
+      selectedRole = role;
+      errorAlert.hidden = true;
+
+      if (role === "admin") {
+        studentBtn.classList.remove("active");
+        studentBtn.setAttribute("aria-selected", "false");
+        adminBtn.classList.add("active");
+        adminBtn.setAttribute("aria-selected", "true");
+
+        identityLabel.textContent = "Administrator Username";
+        identityInput.removeAttribute("list");
+        identityInput.placeholder = "e.g. harikrishnareddy or admin";
+        identityInput.value = "harikrishnareddy";
+        fieldHint.textContent = "Administrator Account: Harikrishnareddy";
+        submitBtnText.textContent = "Sign In as Administrator";
+        passwordInput.placeholder = "Enter administrator password";
+      } else {
+        adminBtn.classList.remove("active");
+        adminBtn.setAttribute("aria-selected", "false");
+        studentBtn.classList.add("active");
+        studentBtn.setAttribute("aria-selected", "true");
+
+        identityLabel.textContent = "Student Name or ID";
+        identityInput.setAttribute("list", "students-datalist");
+        identityInput.placeholder = "e.g. S001 or Aarav Sharma";
+        identityInput.value = "";
+        fieldHint.textContent = "Select from suggestions or enter your Student ID / Name";
+        submitBtnText.textContent = "Sign In as Student";
+        passwordInput.placeholder = "Enter student password";
+      }
+    }
+
+    studentBtn.addEventListener("click", () => setRole("student"));
+    adminBtn.addEventListener("click", () => setRole("admin"));
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const rawIdentity = identityInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!rawIdentity || !password) {
+        errorText.textContent = "Please fill in all fields.";
+        errorAlert.hidden = false;
+        return;
+      }
+
+      if (selectedRole === "admin") {
+        // When admin logs in: shows name as Harikrishnareddy in dashboard
+        sessionStorage.setItem("attendancePortalUser", JSON.stringify({
+          name: "Harikrishnareddy",
+          role: "admin",
+          username: rawIdentity
+        }));
+        window.location.assign("/dashboard");
+        return;
+      }
+
+      // Student login: resolve student name
+      let studentName = rawIdentity;
+      let studentId = "";
+
+      // Check if format is "S001 - Aarav Sharma"
+      if (rawIdentity.includes("-")) {
+        const parts = rawIdentity.split("-");
+        studentId = parts[0].trim();
+        const candidate = parts.slice(1).join("-").trim();
+        if (candidate) studentName = candidate;
+      }
+
+      // Match against known student list
+      const query = (studentId || rawIdentity).toLowerCase();
+      const matched = knownStudents.find(s => 
+        (s.student_id && s.student_id.toLowerCase() === query) ||
+        (s.roll_number && s.roll_number.toLowerCase() === query) ||
+        (s.name && s.name.toLowerCase() === query) ||
+        (s.name && s.name.toLowerCase() === studentName.toLowerCase())
+      );
+
+      if (matched) {
+        studentName = matched.name;
+        studentId = matched.student_id;
+      }
+
+      // Store student details in session
+      sessionStorage.setItem("attendancePortalUser", JSON.stringify({
+        name: studentName,
+        studentId: studentId,
+        role: "student"
+      }));
+
+      window.location.assign("/dashboard");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Attendance - Sandip University Attendance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Topbar Header (Sandip University Style) -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger-btn" id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+      <div class="univ-brand">
+        <div class="univ-logo-badge">
+          <img src="assets/sandip-banner.jpg" alt="Sandip University - NAAC Grade A" class="univ-banner-img">
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="notif-bell-btn" title="Notifications">
+        🔔
+        <span class="notif-count">0</span>
+      </button>
+
+      <div class="user-greeting">
+        Welcome: <span>Harikrishnareddy</span>
+      </div>
+
+      <div class="db-pill">
+        <span class="db-dot"></span>
+        <span id="db-status-info">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Body Layout (Sidebar + Main Content) -->
+  <div class="app-container">
+    
+    <!-- Left Dark Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-category">ATTENDANCE SYSTEM</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/dashboard" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📊</span>
+              <span>Dashboard</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/students" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">👨‍🎓</span>
+              <span>Student Directory</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/attendance" class="sidebar-link active">
+            <div class="link-left">
+              <span class="link-icon">📝</span>
+              <span>Mark Attendance</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/subjects" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📚</span>
+              <span>Subjects</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-category">SET THEORY MODULE</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/analysis" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">🔢</span>
+              <span>Set Theory &amp; Venn</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/reports" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📑</span>
+              <span>Academic Reports</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+      
+      <!-- Breadcrumb Header -->
+      <div class="content-breadcrumb">
+        Daily Attendance Entry <span>Subject-Wise Classroom Attendance Recorder</span>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="panel">
+        <div class="panel-body">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <!-- Calendar Date Picker -->
+              <div>
+                <label for="attendance-date-picker" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Select Date 📅:</label>
+                <input type="date" id="attendance-date-picker" class="form-control" style="min-width: 155px; font-weight: 600;" onchange="loadAttendanceSheet()">
+              </div>
+
+              <!-- Subject Selector (From Database) -->
+              <div>
+                <label for="attendance-subject-select" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Select Subject 📚:</label>
+                <select id="attendance-subject-select" class="form-control" style="min-width: 210px; font-weight: 600; color: #1d4ed8;" onchange="loadAttendanceSheet()">
+                  <!-- Dynamically populated from database -->
+                </select>
+              </div>
+
+              <!-- Class Selector -->
+              <div>
+                <label for="attendance-class-filter" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Class 🎓:</label>
+                <select id="attendance-class-filter" class="form-control" onchange="loadAttendanceSheet()">
+                  <option value="">All Classes</option>
+                </select>
+              </div>
+
+              <!-- Section Selector -->
+              <div>
+                <label for="attendance-section-filter" style="font-weight: 700; font-size: 0.82rem; display: block; margin-bottom: 0.2rem; color: #1e293b;">Section:</label>
+                <select id="attendance-section-filter" class="form-control" onchange="loadAttendanceSheet()">
+                  <option value="">All Sections</option>
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                  <option value="C">Section C</option>
+                  <option value="D">Section D</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="markAll('Present')">✓ Mark All Present</button>
+              <button class="btn btn-secondary btn-sm" onclick="markAll('Absent')">✕ Mark All Absent</button>
+              <button class="btn btn-success" onclick="saveAttendanceBatch()" id="btn-save-attendance-top">💾 Save Attendance</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Summary Badges -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; padding: 0.6rem 1.15rem; border-radius: 8px; font-size: 0.85rem;">
+          Total Cohort: <strong id="sheet-total-count">0</strong>
+        </div>
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.6rem 1.15rem; border-radius: 8px; font-size: 0.85rem; color: #065f46;">
+          Present (Set A): <strong id="sheet-present-count">0</strong>
+        </div>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 0.6rem 1.15rem; border-radius: 8px; font-size: 0.85rem; color: #991b1b;">
+          Absent (Complement A'): <strong id="sheet-absent-count">0</strong>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">S.No</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Class-Section</th>
+                <th style="width: 220px;">Attendance Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem;">Loading attendance roster...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding: 1rem 1.5rem; background: #fafbfc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+          <button class="btn btn-success" onclick="saveAttendanceBatch()">💾 Save Attendance</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Student Attendance Analyzer Using Set Theory &bull; Sandip University College Engineering Project &bull; BUCHIREDDYGARI HARI KRISHNA REDDY
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
