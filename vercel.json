@@ -1,13 +1,13 @@
 {
   "rewrites": [
     {
-      "source": "/",
+      "source": "/(.*)",
       "destination": "/backend/app.py"
     }
   ],
   "functions": {
     "backend/app.py": {
-      "includeFiles": "frontend/**"
+      "includeFiles": "{frontend/**,database/**}"
     }
   }
 }
