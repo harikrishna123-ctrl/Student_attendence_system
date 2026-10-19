@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Directory - Sandip University Attendance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Topbar Header (Sandip University Style) -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger-btn" id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+      <div class="univ-brand">
+        <div class="univ-logo-badge">
+          <img src="assets/sandip-banner.jpg" alt="Sandip University - NAAC Grade A" class="univ-banner-img">
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="notif-bell-btn" title="Notifications">
+        🔔
+        <span class="notif-count">0</span>
+      </button>
+
+      <div class="user-greeting">
+        Welcome: <span>Harikrishnareddy</span>
+      </div>
+
+      <div class="db-pill">
+        <span class="db-dot"></span>
+        <span id="db-status-info">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Body Layout (Sidebar + Main Content) -->
+  <div class="app-container">
+    
+    <!-- Left Dark Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-category">ATTENDANCE SYSTEM</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/dashboard" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📊</span>
+              <span>Dashboard</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/students" class="sidebar-link active">
+            <div class="link-left">
+              <span class="link-icon">👨‍🎓</span>
+              <span>Student Directory</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/attendance" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📝</span>
+              <span>Mark Attendance</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/subjects" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📚</span>
+              <span>Subjects</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-category">SET THEORY MODULE</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/analysis" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">🔢</span>
+              <span>Set Theory &amp; Venn</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/reports" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📑</span>
+              <span>Academic Reports</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+      
+      <!-- Breadcrumb Header -->
+      <div class="content-breadcrumb">
+        Student Management <span>Master Directory (Universal Set U)</span>
+      </div>
+
+      <!-- Action & Filter Panel -->
+      <div class="panel">
+        <div class="panel-body">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <input type="text" id="student-search" class="form-control" placeholder="🔍 Search name, roll, or ID..." style="min-width: 250px;">
+              <select id="class-filter" class="form-control" onchange="loadStudents()">
+                <option value="">All Classes</option>
+                <option value="CSE-A">CSE-A</option>
+                <option value="CSE-B">CSE-B</option>
+                <option value="IT-A">IT-A</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="loadStudents()">Filter</button>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary" onclick="loadSampleCollegeData()">⚡ Load Sample Students</button>
+              <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add New Student</button>
+            </div>
+          </div>
+          <div style="margin-top: 0.75rem; font-size: 0.82rem; color: #64748b;" id="student-count-display">
+            Loading student directory...
+          </div>
+        </div>
+      </div>
+
+      <!-- Students Table Panel -->
+      <div class="panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">S.No</th>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th style="width: 170px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem;">Loading student database...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Add / Edit Student Modal Dialog -->
+  <div class="modal-overlay" id="student-modal">
+    <div class="modal-dialog">
+      <form id="student-form" onsubmit="handleStudentFormSubmit(event); return false;">
+        <input type="hidden" id="form-action-mode" value="add">
+        <div class="modal-header">
+          <h3 class="modal-title" id="student-modal-title">Add New Student</h3>
+          <button type="button" class="modal-close" onclick="closeModal('student-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="student-modal-error" style="display:none; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:0.6rem 0.85rem; border-radius:6px; margin-bottom:1rem; font-size:0.85rem; font-weight:600;"></div>
+          <div class="form-group">
+            <label class="form-label" for="form-student-id">Student ID (Unique)</label>
+            <input type="text" id="form-student-id" class="form-control" placeholder="e.g. S011" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-name">Full Student Name</label>
+            <input type="text" id="form-name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="form-roll">Roll Number / Hall Ticket</label>
+            <input type="text" id="form-roll" class="form-control" placeholder="e.g. 21CS11" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="form-class">Class</label>
+              <input type="text" id="form-class" class="form-control" placeholder="e.g. CSE-A" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="form-section">Section</label>
+              <input type="text" id="form-section" class="form-control" placeholder="e.g. A" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('student-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-student">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Student Details Modal Dialog -->
+  <div class="modal-overlay" id="view-student-modal">
+    <div class="modal-dialog" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="view-student-title">Student Profile</h3>
+        <button type="button" class="modal-close" onclick="closeModal('view-student-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="view-student-body">
+        <div style="text-align: center; padding: 2rem;">Loading student profile...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('view-student-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Student Attendance Analyzer Using Set Theory &bull; Sandip University College Engineering Project &bull; BUCHIREDDYGARI HARI KRISHNA REDDY
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

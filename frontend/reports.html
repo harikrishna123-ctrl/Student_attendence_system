@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Reports - Sandip University Attendance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .report-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .report-tab-btn {
+      padding: 0.65rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+    .report-tab-btn:hover {
+      color: #1d4ed8;
+    }
+    .report-tab-btn.active {
+      color: #1d4ed8;
+      border-bottom-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar Header (Sandip University Style) -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger-btn" id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+      <div class="univ-brand">
+        <div class="univ-logo-badge">
+          <img src="assets/sandip-banner.jpg" alt="Sandip University - NAAC Grade A" class="univ-banner-img">
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <button class="notif-bell-btn" title="Notifications">
+        🔔
+        <span class="notif-count">0</span>
+      </button>
+
+      <div class="user-greeting">
+        Welcome: <span>Harikrishnareddy</span>
+      </div>
+
+      <div class="db-pill">
+        <span class="db-dot"></span>
+        <span id="db-status-info">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Body Layout (Sidebar + Main Content) -->
+  <div class="app-container">
+    
+    <!-- Left Dark Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-category">ATTENDANCE SYSTEM</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/dashboard" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📊</span>
+              <span>Dashboard</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/students" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">👨‍🎓</span>
+              <span>Student Directory</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/attendance" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📝</span>
+              <span>Mark Attendance</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/subjects" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">📚</span>
+              <span>Subjects</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-category">SET THEORY MODULE</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item">
+          <a href="/analysis" class="sidebar-link">
+            <div class="link-left">
+              <span class="link-icon">🔢</span>
+              <span>Set Theory &amp; Venn</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a href="/reports" class="sidebar-link active">
+            <div class="link-left">
+              <span class="link-icon">📑</span>
+              <span>Academic Reports</span>
+            </div>
+            <span style="font-size: 0.75rem;">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+      
+      <!-- Breadcrumb Header -->
+      <div class="content-breadcrumb">
+        Attendance Reports <span>Official Academic Records &amp; Excel Export</span>
+      </div>
+
+      <!-- Comprehensive Filters Panel -->
+      <div class="panel">
+        <div class="panel-body">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.85rem; align-items: flex-end;">
+            
+            <!-- Student Filter -->
+            <div style="flex: 1; min-width: 170px;">
+              <label for="report-student-filter" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">Student:</label>
+              <select id="report-student-filter" class="form-control" style="width: 100%;">
+                <option value="">All Students</option>
+              </select>
+            </div>
+
+            <!-- Subject Filter -->
+            <div style="flex: 1; min-width: 160px;">
+              <label for="report-subject-filter" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">Subject:</label>
+              <select id="report-subject-filter" class="form-control" style="width: 100%;">
+                <option value="">All Subjects</option>
+              </select>
+            </div>
+
+            <!-- Class Filter -->
+            <div style="flex: 1; min-width: 130px;">
+              <label for="report-class-filter" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">Class:</label>
+              <select id="report-class-filter" class="form-control" style="width: 100%;">
+                <option value="">All Classes</option>
+              </select>
+            </div>
+
+            <!-- Section Filter -->
+            <div style="width: 100px;">
+              <label for="report-section-filter" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">Section:</label>
+              <select id="report-section-filter" class="form-control" style="width: 100%;">
+                <option value="">All Sec</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+
+            <!-- Date From -->
+            <div style="width: 145px;">
+              <label for="report-date-from" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">From 📅:</label>
+              <input type="date" id="report-date-from" class="form-control" style="width: 100%;">
+            </div>
+
+            <!-- Date To -->
+            <div style="width: 145px;">
+              <label for="report-date-to" style="font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem;">To 📅:</label>
+              <input type="date" id="report-date-to" class="form-control" style="width: 100%;">
+            </div>
+
+            <!-- Filter Buttons -->
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button class="btn btn-primary" onclick="loadAcademicReport()">🔍 Generate Report</button>
+              <button class="btn btn-excel" onclick="exportReportToExcel()" id="btn-export-excel" title="Download Excel .xlsx Workbook">
+                📊 Export Report to Excel
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Tabs -->
+      <div class="report-tabs">
+        <button class="report-tab-btn active" data-tab="academic" onclick="switchReportTab('academic')">
+          📋 Student Attendance Report
+        </button>
+        <button class="report-tab-btn" data-tab="individual" onclick="switchReportTab('individual')">
+          👤 Individual Student Report
+        </button>
+        <button class="report-tab-btn" data-tab="defaulters" onclick="switchReportTab('defaulters')">
+          ⚠ Defaulters List (&lt; 75%)
+        </button>
+        <button class="report-tab-btn" data-tab="daily" onclick="switchReportTab('daily')">
+          📅 Daily Working Days Log
+        </button>
+      </div>
+
+      <!-- SECTION 1: COMPREHENSIVE ACADEMIC ATTENDANCE REPORT (Sections 11 & 12) -->
+      <section id="report-academic" class="report-section">
+        <div class="panel">
+          <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+              <div class="panel-title">Official Student Attendance Report</div>
+              <div style="font-size: 0.85rem; color: #64748b;">Formula: Attendance % = (Present Classes / Total Classes) &times; 100</div>
+            </div>
+            <div id="academic-report-count" style="font-size: 0.85rem; font-weight: 600; color: #1d4ed8;">
+              Loading report records...
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">S.No</th>
+                  <th>Student ID</th>
+                  <th>Roll Number</th>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Section</th>
+                  <th>Subject</th>
+                  <th>Total Classes</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>Attendance %</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="academic-report-tbody">
+                <tr><td colspan="12" style="text-align: center; padding: 2rem;">Loading academic attendance report...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: INDIVIDUAL STUDENT REPORT (Section 13) -->
+      <section id="report-individual" class="report-section" style="display: none;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Individual Student Detailed Report</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Subject-by-subject attendance summary and overall percentage</div>
+          </div>
+          <div class="panel-body">
+            <!-- Student Selector -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+              <label for="individual-student-select" style="font-weight: 700; font-size: 0.9rem;">Select Student to View:</label>
+              <select id="individual-student-select" class="form-control" style="min-width: 260px;" onchange="loadIndividualStudentReport()">
+                <!-- Populated via script.js -->
+              </select>
+            </div>
+
+            <!-- Student Profile Header Card -->
+            <div id="individual-student-card" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                  <h3 id="ind-name" style="margin: 0; font-size: 1.25rem; color: #0f172a;">Select a Student</h3>
+                  <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;" id="ind-meta">Student ID: - | Roll No: - | Class: -</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Overall Attendance</div>
+                  <div id="ind-overall-pct" style="font-size: 1.85rem; font-weight: 900; color: #1d4ed8;">0.0%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subject-wise Breakdown Table -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Total Classes</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Percentage</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="individual-breakdown-tbody">
+                  <tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">Please select a student above.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: DEFAULTERS LIST REPORT (< 75%) -->
+      <section id="report-defaulters" class="report-section" style="display: none;">
+        <div class="panel" style="border-top: 3px solid #dc2626;">
+          <div class="panel-header" style="background: #fef2f2; display: flex; justify-content: space-between; align-items: center;">
+            <div class="panel-title" style="color: #991b1b;">
+              ⚠ Official Low-Attendance Notice (&lt; 75%)
+            </div>
+            <span class="badge badge-defaulter" id="defaulter-count">0 Defaulter(s)</span>
+          </div>
+          <div class="panel-body" style="background: #fff9f9; border-bottom: 1px solid #fecaca; font-size: 0.85rem; color: #7f1d1d;">
+            Official Notice: Students listed below do not fulfill the mandatory 75% attendance criterion stipulated by university guidelines and are at risk of debarment from semester examinations.
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">S.No</th>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Class (Sec)</th>
+                  <th>Subject</th>
+                  <th>Attendance (P / Total)</th>
+                  <th>Current %</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="defaulter-report-tbody">
+                <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading defaulters...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: DAILY WORKING DAYS LOG -->
+      <section id="report-daily" class="report-section" style="display: none;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Daily Working Days Audit</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Historical record of lectures conducted</div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">S.No</th>
+                  <th>Attendance Date</th>
+                  <th>Total Enrolled Marked</th>
+                  <th>Present Count (Set A)</th>
+                  <th>Absent Count (Complement A')</th>
+                  <th>Turnout Percentage</th>
+                </tr>
+              </thead>
+              <tbody id="daily-report-tbody">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading daily log...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Student Attendance Analyzer Using Set Theory &bull; Sandip University College Engineering Project &bull; BUCHIREDDYGARI HARI KRISHNA REDDY
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
